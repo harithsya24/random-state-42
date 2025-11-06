@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>🩸 BloodBank AI – Open Map</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+  />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <style>
+    body { margin: 0; padding: 0; background: #0f172a; color: white; }
+    #map { height: 100vh; width: 100%; }
+    .leaflet-popup-content-wrapper { background: #1e293b; color: #f8fafc; }
+    .leaflet-popup-tip { background: #1e293b; }
+    h2 { text-align:center; padding:10px; }
+  </style>
+</head>
+
+<body>
+  <h2>BloodBank AI Live Map (OpenStreetMap)</h2>
+  <div id="map"></div>
+
+  <script>
+    const map = L.map("map").setView([40.7128, -74.0060], 11);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: "© OpenStreetMap contributors"
+    }).addTo(map);
+
+    async function loadCSV() {
+      Papa.parse("map.csv", {
+        download: true,
+        header: true,
+        complete: function(results) {
+          results.data.forEach(row => {
+            const lat = parseFloat(row.latitude);
+            const lon = parseFloat(row.longitude);
+            const label = row.label || "Unknown";
+
+            if (!isNaN(lat) && !isNaN(lon)) {
+              const marker = L.circleMarker([lat, lon], {
+                color: "#10b981",
+                fillColor: "#34d399",
+                fillOpacity: 0.8,
+                radius: 6
+              }).addTo(map);
+
+              marker.bindPopup(`<b>${label}</b><br>Lat: ${lat}, Lon: ${lon}`);
+            }
+          });
+        }
+      });
+    }
+
+    async function loadBackendData() {
+      try {
+        const data = await fetch("http://127.0.0.1:8000/api/map_data").then(r => r.json());
+        const nodes = data.nodes;
+
+        nodes.forEach(n => {
+          if (n.kind === 'donor') return; // Skip donors
+
+          const color = n.kind === 'hospital' ? "#ef4444" :
+                        n.kind === 'bloodbank' ? "#3b82f6" : "#10b981";
+
+          const marker = L.circleMarker([n.lat, n.lon], {
+            color: color,
+            fillColor: color,
+            fillOpacity: 0.9,
+            radius: 8
+          }).addTo(map);
+
+          marker.bindPopup(`<b>${n.label}</b><br>${n.kind.charAt(0).toUpperCase() + n.kind.slice(1)}<br>ID: ${n.id}`);
+        });
+      } catch (err) {
+        console.error("Failed to load backend data:", err);
+      }
+    }
+
+    loadCSV();
+    loadBackendData();
+  </script>
+</body>
+</html>

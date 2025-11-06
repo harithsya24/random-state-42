@@ -1,59 +1,120 @@
-from flask import Flask, jsonify, send_from_directory
-import pandas as pd
-import json
-import os
+# server.py
+from flask import Flask, jsonify, render_template, request
+from src.orchestrator import EmergencyOrchestrator
+from src.gnn_model import BloodSupplyGNN
+from src.graph_builder import build_supply_graph
+from src.data_loader import load_all
 
-app = Flask(__name__, static_folder='ui', template_folder='ui')
+app = Flask(__name__)
 
-DATA_DIR = 'data'
+# -------------------------------
+# Load data and build graph
+# -------------------------------
+hospitals, blood_banks, units, donors, emergencies, edges, kg = load_all()
+G = build_supply_graph(hospitals, blood_banks, donors, units, emergencies, edges, kg)
 
-# --- Serve frontend ---
-@app.route('/')
+# -------------------------------
+# Initialize GNN and Orchestrator
+# -------------------------------
+gnn = BloodSupplyGNN(node_feature_dim=32, hidden_dim=64)
+orchestrator = EmergencyOrchestrator(G, neurosymbolic_gnn=gnn)  # Replace None with gnn if using neural optimization
+
+# -------------------------------
+# Routes
+# -------------------------------
+
+@app.route("/")
 def index():
-    return send_from_directory('ui', 'index.html')
+    return render_template("map.html")
 
-@app.route('/map')
-def map_page():
-    return send_from_directory('ui', 'map.html')
 
-# --- API Endpoints ---
+@app.route("/api/map_data")
+def map_data():
+    """
+    Return nodes and active transfers for map visualization
+    """
+    nodes = []
+    for node_id, data in G.nodes(data=True):
+        if data.get('kind') in ['hospital', 'bloodbank', 'donor']:
+            nodes.append({
+                'id': node_id,
+                'kind': data.get('kind'),
+                'lat': data.get('lat'),
+                'lon': data.get('lon'),
+                'label': data.get('label', node_id)
+            })
 
-@app.route('/api/donors')
-def get_donors():
-    df = pd.read_csv(os.path.join(DATA_DIR, 'donors_nyc.csv'))
-    return jsonify(df.to_dict(orient='records'))
+    transfers = orchestrator.active_transfers
 
-@app.route('/api/hospitals')
-def get_hospitals():
-    df = pd.read_csv(os.path.join(DATA_DIR, 'hospitals_nyc.csv'))
-    return jsonify(df.to_dict(orient='records'))
+    return jsonify({'nodes': nodes, 'transfers': transfers})
 
-@app.route('/api/blood_units')
-def get_blood_units():
-    df = pd.read_csv(os.path.join(DATA_DIR, 'blood_units_nyc.csv'))
-    return jsonify(df.to_dict(orient='records'))
 
-@app.route('/api/bloodbanks')
-def get_bloodbanks():
-    df = pd.read_csv(os.path.join(DATA_DIR, 'bloodbanks_nyc.csv'))
-    return jsonify(df.to_dict(orient='records'))
+@app.route("/api/emergency", methods=['POST'])
+def emergency():
+    """
+    Trigger a simulated emergency
+    JSON payload:
+    {
+        "emergency_id": "e123",
+        "hospital_id": "h1",
+        "required_blood_type": "A+",
+        "units_required": 5
+    }
+    """
+    data = request.get_json()
+    emergency_id = data['emergency_id']
+    hospital_id = data['hospital_id']
+    required_blood_type = data['required_blood_type']
+    units_required = data['units_required']
 
-@app.route('/api/emergencies')
-def get_emergencies():
-    df = pd.read_csv(os.path.join(DATA_DIR, 'emergencies_nyc.csv'))
-    return jsonify(df.to_dict(orient='records'))
+    result = orchestrator.handle_emergency(
+        emergency_id=emergency_id,
+        hospital_id=hospital_id,
+        required_blood_type=required_blood_type,
+        units_required=units_required
+    )
 
-@app.route('/api/graph')
-def get_graph():
-    with open(os.path.join(DATA_DIR, 'knowledge_graph_nyc.json')) as f:
-        data = json.load(f)
-    return jsonify(data)
+    return jsonify(result)
 
-# Placeholder for GNN predictions
-@app.route('/api/gnn_predict')
-def gnn_predict():
-    return jsonify({"message": "GNN prediction API placeholder"})
 
-# --- Run server ---
-if __name__ == '__main__':
-    app.run(debug=True)
+@app.route("/api/optimize_inventory")
+def optimize_inventory():
+    """
+    Run proactive inventory optimization (expiry prevention)
+    """
+    optimizations = orchestrator.optimize_inventory()
+    return jsonify(optimizations)
+
+
+@app.route("/api/predict_shortages")
+def predict_shortages():
+    """
+    Predict potential shortages for next 24 hours
+    """
+    predictions = orchestrator.predict_shortages(hours_ahead=24)
+    return jsonify(predictions)
+
+
+@app.route("/api/call_donors", methods=['POST'])
+def call_donors():
+    """
+    Identify and notify eligible donors
+    JSON payload:
+    {
+        "blood_type": "O-",
+        "urgency": "high"
+    }
+    """
+    data = request.get_json()
+    blood_type = data.get('blood_type')
+    urgency = data.get('urgency', 'high')
+
+    donors = orchestrator.call_donors(blood_type, urgency)
+    return jsonify(donors)
+
+
+# -------------------------------
+# Run server
+# -------------------------------
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=8000, debug=True)
