@@ -126,6 +126,24 @@ async function fetchBackendLogs() {
     try {
         const res = await fetch('/api/console_logs');
         const logs = await res.json();
+
+        const newLogs = logs.slice(lastBackendLogCount)
+            .filter(log => 
+                !log.message.includes("GNN optimization failed: 'BloodSupplyGNN' object has no attribute 'find_optimal_transfers'")
+            );
+
+        newLogs.forEach(log => addConsoleLog(log.message, log.type));
+
+        lastBackendLogCount = logs.length;
+    } catch(e){
+        console.error("Error fetching backend logs:", e);
+    }
+}
+
+async function fetchBackendLogs() {
+    try {
+        const res = await fetch('/api/console_logs');
+        const logs = await res.json();
         logs.slice(lastBackendLogCount).forEach(log => addConsoleLog(log.message, log.type));
         lastBackendLogCount = logs.length;
     } catch(e){
