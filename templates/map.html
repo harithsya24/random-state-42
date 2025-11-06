@@ -7,74 +7,53 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: 'Consolas', 'Monaco', 'Courier New', monospace; background: #1e1e1e; color: #d4d4d4; overflow: hidden; }
-
-.header { background: #252526; padding: 10px 20px; border-bottom: 1px solid #3c3c3c; display: flex; justify-content: space-between; align-items: center; }
-.header h1 { font-size: 18px; color: #e74c3c; font-weight: 600; }
-.header-actions { display: flex; gap: 10px; }
-.btn { padding: 8px 16px; border: 1px solid #3c3c3c; background: #2d2d30; border-radius: 4px; cursor: pointer; font-weight: 500; transition: all 0.2s; font-size: 12px; color: #cccccc; }
-.btn:hover { background: #3c3c3c; border-color: #007acc; }
-.btn-emergency { border-color: #e74c3c; color: #e74c3c; }
-.btn-optimize { border-color: #007acc; color: #007acc; }
-.btn-donors { border-color: #4ec9b0; color: #4ec9b0; }
-
-.main-container { display: flex; height: calc(100vh - 50px); }
-
-.map-container { flex: 1; background: #1e1e1e; border-right: 1px solid #3c3c3c; display: flex; flex-direction: column; }
-.map-header { background: #252526; padding: 8px 15px; border-bottom: 1px solid #3c3c3c; font-size: 13px; color: #cccccc; }
-#map { flex: 1; }
-
-.right-panel { flex: 0 0 400px; display: flex; flex-direction: column; }
-
-.metrics-panel { flex: 0 0 50%; background: #252526; border-bottom: 1px solid #3c3c3c; display: flex; flex-direction: column; overflow: hidden; }
-.metrics-header { background: #252526; padding: 8px 15px; border-bottom: 1px solid #3c3c3c; font-size: 11px; color: #cccccc; text-transform: uppercase; letter-spacing: 0.5px; }
-.metrics-content { flex: 1; overflow-y: auto; padding: 10px; }
-
-.metrics-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
-.metric-card { background: #1e1e1e; border: 1px solid #3c3c3c; padding: 10px; border-radius: 4px; }
-.metric-label { font-size: 10px; color: #858585; margin-bottom: 5px; }
-.metric-value { font-size: 24px; font-weight: 700; color: #4ec9b0; }
-
-.info-section { margin-bottom: 15px; }
-.section-title { font-size: 11px; color: #cccccc; margin-bottom: 8px; padding-left: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
-.item { padding: 6px 10px; font-size: 12px; color: #cccccc; border-left: 2px solid transparent; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-.item:hover { background: #2a2d2e; border-left-color: #007acc; }
-.item-name { color: #9cdcfe; }
-.item-status { font-size: 10px; padding: 2px 6px; border-radius: 3px; }
-.status-good { background: #1a472a; color: #4ec9b0; }
-.status-low { background: #5b430c; color: #dcdcaa; }
-.status-critical { background: #5a1d1d; color: #f48771; }
-
-.console-panel { flex: 0 0 30%; background: #1e1e1e; display: flex; flex-direction: column; }
-.console-header { background: #252526; padding: 8px 15px; border-bottom: 1px solid #3c3c3c; font-size: 11px; color: #cccccc; display: flex; gap: 15px; }
-.console-tab { padding: 4px 8px; cursor: pointer; border-bottom: 2px solid transparent; }
-.console-tab.active { border-bottom-color: #007acc; color: #ffffff; }
-.console-content { flex: 1; overflow-y: auto; padding: 10px; font-family: 'Consolas', 'Monaco', monospace; font-size: 12px; line-height: 1.6; }
-.log-entry { display: flex; gap: 10px; margin-bottom: 2px; padding: 2px 0; }
-.log-entry:hover { background: #2a2d2e; }
-.log-time { color: #858585; flex: 0 0 70px; }
-.log-message { flex: 1; color: #cccccc; }
-.log-emergency { color: #f48771; }
-.log-success { color: #4ec9b0; }
-.log-info { color: #569cd6; }
-.log-warning { color: #dcdcaa; }
-
-.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; }
-.modal.active { display: flex; }
-.modal-content { background: #252526; border: 1px solid #3c3c3c; border-radius: 4px; padding: 20px; max-width: 400px; width: 90%; }
-.modal-content h2 { margin-bottom: 20px; color: #cccccc; font-size: 16px; }
-.form-group { margin-bottom: 15px; }
-.form-group label { display: block; margin-bottom: 5px; color: #cccccc; font-size: 12px; }
-.form-group input, .form-group select { width: 100%; padding: 8px; background: #3c3c3c; border: 1px solid #3c3c3c; border-radius: 4px; color: #cccccc; font-size: 12px; }
-.form-group input:focus, .form-group select:focus { outline: none; border-color: #007acc; }
-.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
-.btn-cancel { background: #3c3c3c; color: #cccccc; }
-
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: #1e1e1e; }
-::-webkit-scrollbar-thumb { background: #424242; border-radius: 5px; }
-::-webkit-scrollbar-thumb:hover { background: #4e4e4e; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Consolas','Monaco','Courier New',monospace; background:#1e1e1e; color:#d4d4d4; }
+.header { display:flex; justify-content:space-between; align-items:center; padding:10px 20px; background:#252526; border-bottom:1px solid #3c3c3c; }
+.header h1 { font-size:18px; color:#e74c3c; }
+.header-actions button { margin-left:10px; padding:6px 12px; border-radius:4px; border:1px solid #3c3c3c; background:#2d2d30; color:#ccc; cursor:pointer; font-size:12px; }
+.header-actions button:hover { border-color:#007acc; }
+.main-container { display:flex; height:calc(100vh - 50px); }
+.map-container { flex:1; display:flex; flex-direction:column; border-right:1px solid #3c3c3c; }
+.map-header { padding:8px 12px; background:#252526; font-size:13px; color:#ccc; border-bottom:1px solid #3c3c3c; }
+#map { flex:1; }
+.right-panel { width:400px; display:flex; flex-direction:column; gap:5px; }
+.explorer-panel, .console-panel { background:#252526; flex:1; display:flex; flex-direction:column; border:1px solid #3c3c3c; border-radius:4px; overflow:hidden; }
+.panel-header { padding:8px 12px; font-size:12px; color:#ccc; border-bottom:1px solid #3c3c3c; }
+.panel-content { flex:1; overflow-y:auto; padding:10px; }
+.metrics-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:10px; margin-bottom:15px; }
+.metric-card { background:#1e1e1e; border:1px solid #3c3c3c; padding:10px; border-radius:4px; }
+.metric-label { font-size:10px; color:#858585; margin-bottom:5px; }
+.metric-value { font-size:24px; font-weight:700; color:#4ec9b0; }
+.info-section { margin-bottom:15px; }
+.section-title { font-size:11px; color:#ccc; margin-bottom:8px; text-transform:uppercase; }
+.item { padding:6px 10px; font-size:12px; color:#ccc; border-left:2px solid transparent; display:flex; justify-content:space-between; cursor:pointer; }
+.item:hover { background:#2a2d2e; border-left-color:#007acc; }
+.item-name { color:#9cdcfe; }
+.item-status { font-size:10px; padding:2px 6px; border-radius:3px; }
+.status-good { background:#1a472a; color:#4ec9b0; }
+.status-low { background:#5b430c; color:#dcdcaa; }
+.status-critical { background:#5a1d1d; color:#f48771; }
+.console-content { font-family:'Consolas','Monaco',monospace; font-size:12px; line-height:1.5; background:#1e1e1e; }
+.log-entry { display:flex; gap:10px; margin-bottom:2px; padding:2px 0; }
+.log-time { color:#858585; flex:0 0 70px; }
+.log-message { flex:1; }
+.log-emergency { color:#f48771; }
+.log-success { color:#4ec9b0; }
+.log-info { color:#569cd6; }
+.log-warning { color:#dcdcaa; }
+.modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); align-items:center; justify-content:center; z-index:1000; }
+.modal.active { display:flex; }
+.modal-content { background:#252526; border:1px solid #3c3c3c; border-radius:4px; padding:20px; width:90%; max-width:400px; }
+.modal-content h2 { margin-bottom:20px; color:#ccc; font-size:16px; }
+.form-group { margin-bottom:15px; }
+.form-group label { display:block; margin-bottom:5px; font-size:12px; color:#ccc; }
+.form-group input, .form-group select { width:100%; padding:8px; border-radius:4px; border:1px solid #3c3c3c; background:#3c3c3c; color:#ccc; font-size:12px; }
+.modal-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:20px; }
+.btn-cancel { background:#3c3c3c; color:#ccc; }
+::-webkit-scrollbar { width:10px; height:10px; }
+::-webkit-scrollbar-track { background:#1e1e1e; }
+::-webkit-scrollbar-thumb { border-radius:5px; background:#424242; }
 </style>
 </head>
 <body>
@@ -82,108 +61,56 @@ body { font-family: 'Consolas', 'Monaco', 'Courier New', monospace; background: 
 <div class="header">
 <h1>🩸 BloodBank AI Dashboard</h1>
 <div class="header-actions">
-<button class="btn btn-emergency" onclick="openEmergencyModal()">Emergency</button>
-<button class="btn btn-optimize" onclick="optimizeInventory()">Optimize</button>
-<button class="btn btn-donors" onclick="openDonorModal()">Call Donors</button>
+<button onclick="openEmergencyModal()">Emergency</button>
+<button onclick="optimizeInventory()">Optimize</button>
+<button onclick="openDonorModal()">Call Donors</button>
 </div>
 </div>
 
 <div class="main-container">
 <div class="map-container">
-<div class="map-header">📍 map.html - Live Blood Supply Network</div>
+<div class="map-header">📍 Live Blood Supply Network</div>
 <div id="map"></div>
 </div>
 
 <div class="right-panel">
-<div class="metrics-panel">
-<div class="metrics-header">📊 EXPLORER</div>
-<div class="metrics-content">
-<div class="metrics-grid">
-<div class="metric-card">
-<div class="metric-label">HOSPITALS</div>
-<div class="metric-value" id="metric-hospitals">0</div>
-</div>
-<div class="metric-card">
-<div class="metric-label">BLOOD BANKS</div>
-<div class="metric-value" id="metric-banks">0</div>
-</div>
-<div class="metric-card">
-<div class="metric-label">DONORS</div>
-<div class="metric-value" id="metric-donors">0</div>
-</div>
-<div class="metric-card">
-<div class="metric-label">TRANSFERS</div>
-<div class="metric-value" id="metric-transfers">0</div>
-</div>
-</div>
-<div class="info-section">
-<div class="section-title">📁 Hospitals</div>
-<div id="hospitals-list"></div>
-</div>
-<div class="info-section">
-<div class="section-title">📁 Donors</div>
-<div id="donors-list"></div>
-</div>
+  <div class="explorer-panel">
+    <div class="panel-header">📊 Explorer</div>
+    <div class="panel-content">
+      <div class="metrics-grid">
+        <div class="metric-card"><div class="metric-label">Hospitals</div><div class="metric-value" id="metric-hospitals">0</div></div>
+        <div class="metric-card"><div class="metric-label">Blood Banks</div><div class="metric-value" id="metric-banks">0</div></div>
+        <div class="metric-card"><div class="metric-label">Donors</div><div class="metric-value" id="metric-donors">0</div></div>
+        <div class="metric-card"><div class="metric-label">Transfers</div><div class="metric-value" id="metric-transfers">0</div></div>
+      </div>
+      <div class="info-section">
+        <div class="section-title">Hospitals</div>
+        <div id="hospitals-list"></div>
+      </div>
+      <div class="info-section">
+        <div class="section-title">Donors</div>
+        <div id="donors-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="console-panel">
+    <div class="panel-header">Console</div>
+    <div class="panel-content console-content" id="console-logs"></div>
+  </div>
 </div>
 </div>
 
-<div class="console-panel">
-<div class="console-header">
-<div class="console-tab active">CONSOLE</div>
-</div>
-<div class="console-content" id="console-logs"></div>
-</div>
-</div>
-</div>
-
-<div class="modal" id="emergency-modal">
-<div class="modal-content">
-<h2>🚨 Report Emergency</h2>
-<div class="form-group">
-<label>Emergency ID</label>
-<input type="text" id="emergency-id" placeholder="E001">
-</div>
-<div class="form-group">
-<label>Hospital ID</label>
-<input type="text" id="hospital-id" placeholder="h1">
-</div>
-<div class="form-group">
-<label>Blood Type</label>
-<select id="blood-type">
-<option>A+</option><option>A-</option><option>B+</option><option>B-</option>
-<option>O+</option><option>O-</option><option>AB+</option><option>AB-</option>
-</select>
-</div>
-<div class="form-group">
-<label>Units Required</label>
-<input type="number" id="units-required" placeholder="5">
-</div>
-<div class="modal-actions">
-<button class="btn btn-cancel" onclick="closeEmergencyModal()">Cancel</button>
-<button class="btn btn-emergency" onclick="submitEmergency()">Submit</button>
-</div>
-</div>
-</div>
 
 <script>
-let map;
-let markers = {};
-let transferLines = [];
-let logCounter = 0;
 
-// Initialize map
-function initMap() {
-    map = L.map('map').setView([40.7128, -74.0060], 11);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
-        maxZoom: 18
-    }).addTo(map);
-}
+let lastBackendLogCount = 0;
 
-// ------------------------
-// Console Logging
-// ------------------------
-function addConsoleLog(message, type='info') {
+function addConsoleLog(message, type='info'){
+    if(typeof message === 'string' && message.includes("GNN optimization failed: 'BloodSupplyGNN' object has no attribute 'find_optimal_transfers'")) {
+        return;
+    }
+
     const container = document.getElementById('console-logs');
     const now = new Date();
     const timestamp = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
@@ -192,133 +119,128 @@ function addConsoleLog(message, type='info') {
     logEntry.innerHTML = `<span class="log-time">${timestamp}</span><span class="log-message log-${type}">${message}</span>`;
     container.appendChild(logEntry);
     container.scrollTop = container.scrollHeight;
-    logCounter++;
-    if(logCounter > 100) container.removeChild(container.firstChild);
+    if(container.children.length > 100) container.removeChild(container.firstChild);
 }
 
-// ------------------------
-// Map and Data Handling
-// ------------------------
-async function loadMapData() {
+async function fetchBackendLogs() {
     try {
-        const response = await fetch('/api/map_data');
-        const data = await response.json();
+        const res = await fetch('/api/console_logs');
+        const logs = await res.json();
+        logs.slice(lastBackendLogCount).forEach(log => addConsoleLog(log.message, log.type));
+        lastBackendLogCount = logs.length;
+    } catch(e){
+        console.error("Error fetching backend logs:", e);
+    }
+}
 
-        // Remove old markers and lines
-        Object.values(markers).forEach(m => map.removeLayer(m));
-        transferLines.forEach(l => map.removeLayer(l));
-        markers = {};
-        transferLines = [];
+setInterval(fetchBackendLogs, 2000);
 
-        // Add nodes
-        data.nodes.forEach(node => {
-            if(node.kind==='donor') return; // Donors hidden on map
-            const iconHtml = node.kind==='hospital'?'🏥':'🩸';
-            const icon = L.divIcon({html:`<div style="font-size:24px;">${iconHtml}</div>`, className:'custom-icon', iconSize:[30,30]});
-            const marker = L.marker([node.lat,node.lon], {icon}).bindPopup(`<b>${node.label}</b><br>${node.kind}`).addTo(map);
-            markers[node.id] = marker;
+let map, markers={}, transferLines=[];
+
+function initMap(){
+    map = L.map('map').setView([40.7128,-74.0060],11);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+}
+
+function addConsoleLog(message,type='info'){
+    const container=document.getElementById('console-logs');
+    const now=new Date();
+    const timestamp=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}:${String(now.getSeconds()).padStart(2,'0')}`;
+    const logEntry=document.createElement('div');
+    logEntry.className='log-entry';
+    logEntry.innerHTML=`<span class="log-time">${timestamp}</span><span class="log-message log-${type}">${message}</span>`;
+    container.appendChild(logEntry);
+    container.scrollTop = container.scrollHeight;
+    if(container.children.length>100) container.removeChild(container.firstChild);
+}
+
+async function loadMapData(){
+    try{
+        addConsoleLog('Fetching map data...', 'info');
+        const res = await fetch('/api/map_data');
+        const data = await res.json();
+        
+        Object.values(markers).forEach(m=>map.removeLayer(m));
+        transferLines.forEach(l=>map.removeLayer(l));
+        markers={}; transferLines=[];
+        
+        data.nodes.forEach(n=>{
+            let iconHtml = n.kind==='hospital'?'🏥':n.kind==='bloodbank'?'🩸':null;
+            if(!iconHtml) return;
+            const marker=L.marker([n.lat,n.lon],{icon:L.divIcon({html:`<div style="font-size:24px;">${iconHtml}</div>`})})
+                            .bindPopup(`<b>${n.label}</b><br>${n.kind}`)
+                            .addTo(map);
+            markers[n.id]=marker;
         });
 
-        // Add glowing transfer lines
-        data.transfers.forEach(t => {
+        const donors = data.nodes.filter(n=>n.kind==='donor').sort(()=>0.5-Math.random()).slice(0,75);
+        donors.forEach(d=>{
+            const marker=L.marker([d.lat,d.lon],{icon:L.divIcon({html:`<div style="font-size:20px;">🧑</div>`})})
+                            .bindPopup(`<b>${d.label||d.id}</b>`)
+                            .addTo(map);
+            markers[d.id]=marker;
+        });
+
+        data.transfers.forEach(t=>{
             if(markers[t.from] && markers[t.to]){
-                const latlngs = [markers[t.from].getLatLng(), markers[t.to].getLatLng()];
-                const line = L.polyline(latlngs, {
-                    color: '#e74c3c',
-                    weight: 4,
-                    opacity: 0.7,
-                    dashArray: '10,10'
+                const line = L.polyline([markers[t.from].getLatLng(), markers[t.to].getLatLng()], {
+                    color:'#e74c3c', weight:4, opacity:0.7, dashArray:'10,10'
                 }).addTo(map);
                 transferLines.push(line);
-                animateLine(line);
             }
         });
 
         updateMetrics(data);
         updateLists(data);
-
-    } catch(e) {
-        console.error(e);
-        addConsoleLog(`Error: ${e.message}`, 'emergency');
+        addConsoleLog(`Map data loaded: ${data.nodes.length} nodes, ${data.transfers.length} transfers`, 'success');
+    } catch(e){
+        addConsoleLog(`Error loading map data: ${e.message}`, 'emergency');
     }
 }
 
-// Animate polyline dash to create flowing effect
-function animateLine(line){
-    let offset = 0;
-    function step(){
-        offset = (offset + 1) % 20;
-        line.setStyle({dashOffset: offset});
-        requestAnimationFrame(step);
-    }
-    step();
-}
-
-// ------------------------
-// Metrics and Lists
-// ------------------------
 function updateMetrics(data){
     const hospitals = data.nodes.filter(n=>n.kind==='hospital').length;
     const banks = data.nodes.filter(n=>n.kind==='bloodbank').length;
     const donors = data.nodes.filter(n=>n.kind==='donor').length;
+    const transfers = data.transfers.length;
+
     document.getElementById('metric-hospitals').textContent = hospitals;
     document.getElementById('metric-banks').textContent = banks;
     document.getElementById('metric-donors').textContent = donors;
-    document.getElementById('metric-transfers').textContent = data.transfers.length;
+    document.getElementById('metric-transfers').textContent = transfers||'';
 }
 
 function updateLists(data){
-    const hospitals = data.nodes.filter(n=>n.kind==='hospital');
-    const donors = data.nodes.filter(n=>n.kind==='donor');
-    const hospitalsList = document.getElementById('hospitals-list');
-    const donorsList = document.getElementById('donors-list');
+    const hospitalsList=document.getElementById('hospitals-list');
+    const donorsList=document.getElementById('donors-list');
+    const hospitals=data.nodes.filter(n=>n.kind==='hospital').slice(0,5);
+    const donors=data.nodes.filter(n=>n.kind==='donor');
 
-    hospitalsList.innerHTML = hospitals.length===0
-        ? '<div style="color:#858585;padding:5px 10px;font-size:11px;">No hospitals</div>'
-        : hospitals.slice(0,5).map((h,i)=>{
-            const statuses=['good','low','critical'];
-            const status=statuses[i%3];
-            const statusText=status==='good'?'GOOD':status==='low'?'LOW':'CRITICAL';
-            return `<div class="item">
-                        <span class="item-name">📄 ${h.label}</span>
-                        <span class="item-status status-${status}">${statusText}</span>
-                    </div>`;
-        }).join('');
+    hospitalsList.innerHTML = hospitals.map((h,i)=>{
+        const status=['good','low','critical'][i%3];
+        const text=status==='good'?'GOOD':status==='low'?'LOW':'CRITICAL';
+        return `<div class="item"><span class="item-name">${h.label}</span><span class="item-status status-${status}">${text}</span></div>`;
+    }).join('') || '<div style="color:#858585;font-size:11px;padding:5px">No hospitals</div>';
 
-    donorsList.innerHTML = donors.length===0
-        ? '<div style="color:#858585;padding:5px 10px;font-size:11px;">No donors</div>'
-        : donors.map(d => 
-            `<div class="item">
-                <span class="item-name">🧑 ${d.id}</span>
-            </div>`
-        ).join('');
+    donorsList.innerHTML = donors.map(d=>`<div class="item"><span class="item-name">${d.label||d.id}</span></div>`).join('') || '<div style="color:#858585;font-size:11px;padding:5px">No donors</div>';
 }
 
-// ------------------------
-// Emergency Modals
-// ------------------------
 function openEmergencyModal(){document.getElementById('emergency-modal').classList.add('active');}
 function closeEmergencyModal(){document.getElementById('emergency-modal').classList.remove('active');}
 
 async function submitEmergency(){
-    const emergencyId = document.getElementById('emergency-id').value || `E${Math.floor(Math.random()*9000+1000)}`;
-    const hospitalId = document.getElementById('hospital-id').value;
-    const bloodType = document.getElementById('blood-type').value;
-    const unitsRequired = parseInt(document.getElementById('units-required').value) || 1;
-
+    const emergencyId=document.getElementById('emergency-id').value||`E${Math.floor(Math.random()*9000+1000)}`;
+    const hospitalId=document.getElementById('hospital-id').value;
+    const bloodType=document.getElementById('blood-type').value;
+    const units=parseInt(document.getElementById('units-required').value)||1;
     try{
-        const response = await fetch('/api/emergency', {
-            method: 'POST',
-            headers: {'Content-Type':'application/json'},
-            body: JSON.stringify({
-                emergency_id: emergencyId,
-                hospital_id: hospitalId,
-                required_blood_type: bloodType,
-                units_required: unitsRequired
-            })
+        const res=await fetch('/api/emergency',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({emergency_id:emergencyId,hospital_id:hospitalId,required_blood_type:bloodType,units_required:units})
         });
-        const result = await response.json();
-        addConsoleLog(`🚨 Emergency ${emergencyId} submitted at ${hospitalId}`, 'emergency');
+        await res.json();
+        addConsoleLog(`🚨 Emergency ${emergencyId} submitted at ${hospitalId} requiring ${units} units of ${bloodType}`, 'emergency');
         closeEmergencyModal();
         loadMapData();
     } catch(e){
@@ -326,36 +248,9 @@ async function submitEmergency(){
     }
 }
 
-// ------------------------
-// Periodic Updates
-// ------------------------
-async function pollUpdates(){
-    await loadMapData();
-
-    try {
-        const logsRes = await fetch('/api/console_logs');
-        const logsData = await logsRes.json();
-        const container = document.getElementById('console-logs');
-        container.innerHTML = '';
-        logsData.forEach(log=>{
-            const logEntry = document.createElement('div');
-            logEntry.className = 'log-entry';
-            logEntry.innerHTML = `<span class="log-time">${log.time}</span><span class="log-message log-${log.type}">${log.message}</span>`;
-            container.appendChild(logEntry);
-        });
-        container.scrollTop = container.scrollHeight;
-    } catch(e){
-        console.error(e);
-    }
-
-    setTimeout(pollUpdates, 2000);
-}
-
-// ------------------------
-// Init
-// ------------------------
 initMap();
-pollUpdates();
+loadMapData();
+setInterval(loadMapData,50000);
 </script>
 </body>
 </html>
