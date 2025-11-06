@@ -6,6 +6,7 @@ import networkx as nx
 from typing import Dict, List, Optional, Tuple
 from datetime import datetime, timedelta
 import logging
+from src.graph_builder import haversine
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
