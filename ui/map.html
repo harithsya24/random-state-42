@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>🩸 BloodBank AI – Open Map</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+      body { margin: 0; padding: 0; background: #0f172a; color: white; }
+      #map { height: 100vh; width: 100%; }
+      .leaflet-popup-content-wrapper { background: #1e293b; color: #f8fafc; }
+      .leaflet-popup-tip { background: #1e293b; }
+    </style>
+  </head>
+
+  <body>
+    <h2 style="text-align:center; padding:10px;"> BloodBank AI Live Map (OpenStreetMap)</h2>
+    <div id="map"></div>
+
+    <script>
+      const map = L.map("map").setView([40.7128, -74.0060], 11); // Center NYC
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 19,
+        attribution: "© OpenStreetMap contributors"
+      }).addTo(map);
+
+      async function loadData() {
+        const hospitals = await fetch("http://127.0.0.1:5001/api/hospitals").then(r => r.json());
+        const bloodbanks = await fetch("http://127.0.0.1:5001/api/bloodbanks").then(r => r.json());
+
+        hospitals.forEach(h => {
+          const marker = L.circleMarker([h.latitude, h.longitude], {
+            color: "#ef4444", fillColor: "#f87171", fillOpacity: 0.9, radius: 8
+          }).addTo(map);
+          marker.bindPopup(`<b>${h.name}</b><br>🏥 Hospital<br>ID: ${h.id}`);
+        });
+
+        bloodbanks.forEach(bb => {
+          const marker = L.circleMarker([bb.latitude, bb.longitude], {
+            color: "#3b82f6", fillColor: "#60a5fa", fillOpacity: 0.9, radius: 8
+          }).addTo(map);
+          marker.bindPopup(`<b>${bb.name}</b><br> Blood Bank<br>ID: ${bb.id}`);
+        });
+      }
+
+      loadData();
+    </script>
+  </body>
+</html>

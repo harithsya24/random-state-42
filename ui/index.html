@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BloodBank AI - Jaw Dropping Demo</title>
+<style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', sans-serif; background: #0f172a; color: #e2e8f0; overflow-x: hidden; }
+    .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
+    header { text-align: center; padding: 30px 0; }
+    h1 { font-size: 3em; background: linear-gradient(135deg,#ef4444,#ec4899); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .subtitle { color: #94a3b8; font-size: 1.2em; margin-top: 10px; }
+    .controls { display: flex; gap: 20px; justify-content: center; margin-bottom: 20px; }
+    button { padding: 15px 30px; font-size: 1.1em; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: all 0.3s; }
+    .btn-crisis { background: linear-gradient(135deg,#ef4444,#dc2626); color: #fff; }
+    .btn-crisis:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(239,68,68,0.4); }
+    .btn-reset { background: linear-gradient(135deg,#6366f1,#4f46e5); color: #fff; }
+    .btn-reset:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(99,102,241,0.4); }
+    canvas { width: 100%; height: 600px; border-radius: 8px; background: #0f172a; display: block; margin: 0 auto 20px; }
+    #activityLog { max-height: 200px; overflow-y: auto; margin-bottom: 20px; }
+    .activity-item { padding: 10px; margin-bottom: 8px; border-left: 4px solid; border-radius: 4px; background: rgba(15,23,42,0.6); }
+    .activity-item.crisis { border-color: #ef4444; }
+    .activity-item.analysis { border-color: #3b82f6; }
+    .activity-item.transfer { border-color: #f59e0b; }
+    .activity-item.success { border-color: #10b981; }
+    .timestamp { font-size: 0.85em; color: #64748b; margin-right: 8px; }
+    #metrics { margin-bottom: 20px; font-size: 1.2em; }
+    .pulse { animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;}50%{opacity:0.5;} }
+    #dataDisplay { background: rgba(30,41,59,0.9); padding: 15px; border-radius: 8px; overflow-x: auto; }
+    pre { color: #10b981; font-size: 0.9em; }
+    .emergency-banner { position: fixed; top:0; left:0; right:0; background: linear-gradient(90deg,#dc2626,#ef4444); color:white; padding:15px; text-align:center; font-size:1.3em; font-weight:bold; z-index:1000; transform: translateY(-100%); transition: transform 0.5s; }
+    .emergency-banner.active { transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<div class="emergency-banner" id="emergencyBanner">🚨 EMERGENCY ALERT</div>
+
+<div class="container">
+    <header>
+        <h1>🩸 BloodBank AI</h1>
+        <p class="subtitle">Neurosymbolic Blood Supply Chain Orchestration | NYC</p>
+    </header>
+
+    <div class="controls">
+        <button class="btn-crisis" onclick="startCrisis()">🚨 Simulate Emergency</button>
+        <button class="btn-reset" onclick="resetDemo()">🔄 Reset Demo</button>
+    </div>
+
+    <canvas id="mapCanvas" width="1000" height="600"></canvas>
+
+    <div id="metrics">
+        Blood Shortages: <span id="shortages">0</span> | Transfers: <span id="transfers">0</span> | Donors Called: <span id="donors">0</span> | Lives at Risk: <span id="lives">0</span>
+    </div>
+
+    <div id="activityLog">
+        <div class="activity-item info"><span class="timestamp">00:00</span>System initialized. Monitoring hospitals and blood banks.</div>
+    </div>
+
+    <div id="dataDisplay">
+        <h2>Live State Data</h2>
+        <pre id="stateData"></pre>
+    </div>
+</div>
+
+<script>
+let state = {
+    phase: 'idle',
+    time: 0,
+    hospitals: [
+        { id: 'H001', name: 'Manhattan General', x: 0.65, y: 0.35, shortage: false },
+        { id: 'H015', name: 'Jersey City Medical', x: 0.25, y: 0.55, shortage: false },
+        { id: 'H023', name: 'Hoboken Hospital', x: 0.20, y: 0.40, shortage: false },
+        { id: 'H008', name: 'East Side Trauma', x: 0.75, y: 0.30, shortage: false },
+        { id: 'H042', name: 'Downtown Emergency', x: 0.55, y: 0.65, shortage: false }
+    ],
+    bloodBanks: [
+        { id: 'BB001', name: 'Central Blood Bank', x: 0.50, y: 0.45 },
+        { id: 'BB027', name: 'North Jersey Center', x: 0.30, y: 0.25 },
+        { id: 'BB053', name: 'Manhattan Reserve', x: 0.70, y: 0.50 },
+        { id: 'BB089', name: 'Hoboken Blood Center', x: 0.15, y: 0.50 }
+    ],
+    routes: []
+};
+
+const canvas = document.getElementById('mapCanvas');
+const ctx = canvas.getContext('2d');
+
+function drawMap() {
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0,0,w,h);
+
+    // Blood banks
+    state.bloodBanks.forEach(bb => {
+        if (state.phase !== 'idle') {
+            const glow = Math.sin(state.time * 0.1)*0.3+0.7;
+            ctx.fillStyle = `rgba(59,130,246,${glow*0.3})`;
+            ctx.beginPath(); ctx.arc(bb.x*w, bb.y*h, 25,0,Math.PI*2); ctx.fill();
+        }
+        ctx.fillStyle = '#3b82f6';
+        ctx.beginPath(); ctx.arc(bb.x*w, bb.y*h,12,0,Math.PI*2); ctx.fill();
+        ctx.strokeStyle = '#60a5fa'; ctx.lineWidth=2; ctx.stroke();
+    });
+
+    // Hospitals
+    state.hospitals.forEach(h => {
+        if(h.shortage){
+            const pulse = Math.sin(state.time*0.15)*0.4+0.6;
+            ctx.strokeStyle = `rgba(239,68,68,${pulse})`; ctx.lineWidth=5;
+            ctx.beginPath(); ctx.arc(h.x*w,h.y*h,30,0,Math.PI*2); ctx.stroke();
+        }
+        ctx.fillStyle = h.shortage ? '#ef4444':'#10b981';
+        ctx.fillRect(h.x*w-12,h.y*h-12,24,24);
+        ctx.strokeStyle = h.shortage ? '#fca5a5':'#6ee7b7';
+        ctx.lineWidth=3; ctx.strokeRect(h.x*w-12,h.y*h-12,24,24);
+        ctx.strokeStyle='#fff'; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(h.x*w-6,h.y*h); ctx.lineTo(h.x*w+6,h.y*h);
+        ctx.moveTo(h.x*w,h.y*h-6); ctx.lineTo(h.x*w,h.y*h+6); ctx.stroke();
+    });
+
+    // Routes
+    state.routes.forEach(route => {
+        const progress = Math.min((state.time-route.startTime)/100,1);
+        const fx = route.from.x*w; const fy = route.from.y*h;
+        const tx = route.to.x*w; const ty = route.to.y*h;
+        ctx.strokeStyle = '#f59e0b'; ctx.lineWidth=3; ctx.setLineDash([8,4]); ctx.lineDashOffset=-state.time*0.5;
+        ctx.beginPath(); ctx.moveTo(fx,fy); ctx.lineTo(tx,ty); ctx.stroke(); ctx.setLineDash([]);
+        const cx = fx+(tx-fx)*progress; const cy = fy+(ty-fy)*progress;
+        ctx.fillStyle='#ef4444'; ctx.beginPath(); ctx.arc(cx,cy,6,0,Math.PI*2); ctx.fill();
+    });
+}
+
+function addLog(message,type='info'){
+    const log = document.getElementById('activityLog');
+    const item = document.createElement('div');
+    item.className = `activity-item ${type}`;
+    const minutes = Math.floor(state.time/1200);
+    const seconds = Math.floor((state.time%1200)/20);
+    item.innerHTML = `<span class="timestamp">${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}</span>${message}`;
+    log.insertBefore(item,log.firstChild);
+    while(log.children.length>10) log.removeChild(log.lastChild);
+}
+
+function updateMetric(id,value){
+    document.getElementById(id).textContent=value;
+    document.getElementById(id).classList.add('pulse');
+    setTimeout(()=>document.getElementById(id).classList.remove('pulse'),1000);
+}
+
+function displayState(){
+    document.getElementById('stateData').textContent = JSON.stringify(state,null,2);
+}
+
+function animate(){
+    state.time++;
+    drawMap();
+    displayState();
+    requestAnimationFrame(animate);
+}
+animate();
+
+function startCrisis(){
+    if(state.phase!=='idle') return;
+    state.phase='crisis';
+    document.getElementById('emergencyBanner').classList.add('active');
+
+    state.hospitals[0].shortage=true;
+    state.hospitals[2].shortage=true;
+    state.hospitals[4].shortage=true;
+
+    updateMetric('shortages',3);
+    updateMetric('lives',3);
+    addLog('🚨 EMERGENCY: Train derailment - 3 patients with severe blood loss incoming','crisis');
+
+    setTimeout(()=>{
+        addLog('🧠 GNN analyzing blood inventory across hospitals...','analysis');
+        updateMetric('transfers',1);
+    },2000);
+
+    setTimeout(()=>{
+        addLog('📊 Knowledge graph reasoning: Compatible blood found','analysis');
+    },4000);
+
+    setTimeout(()=>{
+        state.routes.push({from:state.bloodBanks[0],to:state.hospitals[0],startTime:state.time});
+        state.routes.push({from:state.bloodBanks[2],to:state.hospitals[2],startTime:state.time});
+        state.routes.push({from:state.bloodBanks[0],to:state.hospitals[4],startTime:state.time});
+        updateMetric('transfers',3);
+        addLog('🚀 Dispatching blood couriers','transfer');
+    },6000);
+
+    setTimeout(()=>{
+        state.hospitals.forEach(h=>h.shortage=false);
+        updateMetric('shortages',0);
+        updateMetric('lives',0);
+        addLog('✅ All blood units delivered before patients arrived','success');
+        document.getElementById('emergencyBanner').classList.remove('active');
+        state.phase='resolved';
+    },12000);
+}
+
+function resetDemo(){
+    state.phase='idle'; state.time=0; state.routes=[];
+    state.hospitals.forEach(h=>h.shortage=false);
+    updateMetric('shortages',0); updateMetric('transfers',0); updateMetric('donors',0); updateMetric('lives',0);
+    document.getElementById('activityLog').innerHTML='<div class="activity-item info"><span class="timestamp">00:00</span>System reset. Ready for new simulation.</div>';
+    document.getElementById('emergencyBanner').classList.remove('active');
+}
+</script>
+</body>
+</html>
